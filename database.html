@@ -85,23 +85,65 @@
 <h2>User Reviews</h2>
     <div id="reviewsContainer">Loading reviews...</div>
 
-    <script>
+    <script type="module">
+    // 1. Import Firebase tools for reading data
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    // 2. YOUR FIREBASE KEYS GO HERE! 
+    // (Use the exact same keys you used on the review page)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAcqsbBfwpycu2q10SkBOF9gQPhw26Gmgw",
+        authDomain: "test-43072.firebaseapp.com",
+        projectId: "test-43072",
+        storageBucket: "test-43072.firebasestorage.app",
+        messagingSenderId: "667168531730",
+        appId: "1:667168531730:web:760e3814f0887bb6cf3fcb",
+        measurementId: "G-VEQTYKQ43N"
+    };
+
+    // 3. Start Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 4. Function to fetch and display reviews
     async function loadReviews() {
-        const response = await fetch("https://sql300.infinityfree.com/get-reviews");
-        const reviews = await response.json();
-
         const container = document.getElementById("reviewsContainer");
-        container.innerHTML = ""; // Clear previous content
+        
+        try {
+            // Ask Firebase for everything inside the "reviews" collection
+            const querySnapshot = await getDocs(collection(db, "reviews"));
+            
+            // Clear the "Loading reviews..." text
+            container.innerHTML = ""; 
 
-        reviews.forEach(review => {
-            const div = document.createElement("div");
-            div.classList.add("review");
-            div.innerHTML = `<strong>${review.username}</strong> (${review.rating}/5) <br> ${review.review} <br><hr>`;
-            container.appendChild(div);
-        });
+            // If the database is completely empty
+            if (querySnapshot.empty) {
+                container.innerHTML = "<p>No reviews yet.</p>";
+                return;
+            }
+
+            // Loop through every review Firebase found
+            querySnapshot.forEach((doc) => {
+                const review = doc.data(); // This grabs the actual text/rating/name
+
+                // Create the visual box for the review (using your CSS classes!)
+                const div = document.createElement("div");
+                div.classList.add("review");
+                div.innerHTML = `<strong>${review.username}</strong> (${review.rating}/5) <br> ${review.review} <br><hr>`;
+                
+                // Add it to the screen
+                container.appendChild(div);
+            });
+
+        } catch (error) {
+            console.error("Error loading reviews:", error);
+            container.innerHTML = "<p>❌ Failed to load reviews.</p>";
+        }
     }
 
-    loadReviews(); // Load reviews when page opens
-    </script>
+    // Run the function as soon as the page opens!
+    loadReviews();
+</script>
 </body>
 </html>
